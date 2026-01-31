@@ -12,4 +12,10 @@ Demo : https://www.youtube.com/shorts/5jegEKwJ2Fk
 7. use the output with skydolly and MSFS
 8. Enjoy
 
+TODO:
+- try during aerobatics
+- reduce pitch factor
+- fix the heading 360 modulo during linearization
+- clean the code
+
 Demo : https://www.youtube.com/shorts/5jegEKwJ2Fk
