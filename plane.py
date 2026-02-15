@@ -24,6 +24,16 @@ df["Latitude"] = df["Latitude"].rolling(window=100, center=True).mean()
 df["Longitude"] = df["Longitude"].rolling(window=100, center=True).mean()
 df["Speed"] = df["Speed"].rolling(window=100, center=True).mean()
 
+df['G'] = round(np.sqrt(
+    df['accelerometerAccelerationX(G)']**2 +
+    df['accelerometerAccelerationY(G)']**2 +
+    df['accelerometerAccelerationZ(G)']**2
+),1)
+
+df["Milliseconds"] = df["Milliseconds"].rolling(window=100, center=True).mean()
+df["s"]=df['Milliseconds']/1000
+df['fpm'] = np.gradient(df['Altitude'], df['s'])
+
 
 # -------- Conversion angles d'Euler -> vecteurs 3 axes --------
 # ==========================
@@ -96,17 +106,19 @@ line_aile_droite = scene.visuals.Line(pos=np.array([[0, 0, 0], [-1, 0, 0]]),colo
 line_cockpit = scene.visuals.Line(pos=np.array([[0, 0, 0], [0, 1, 0]]),color='green',width=4,parent=view.scene)
 # Texte pour numéro de frame
 frame_text = scene.visuals.Text(text="Frame: 0", color='white', font_size=10,pos=(10, 10), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
-utc_text = scene.visuals.Text(text="UTC: 0", color='white', font_size=10,pos=(10, 28), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
-speed_text = scene.visuals.Text(text="Speed(km/h): 0", color='white', font_size=10,pos=(10, 46), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
-altitude_text = scene.visuals.Text(text="Altitude(feet): 0", color='white', font_size=10,pos=(10, 64), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
+utc_text = scene.visuals.Text(text="UTC: 0", color='white', font_size=10,pos=(200, 10), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
+speed_text = scene.visuals.Text(text="Speed(km/h): 0", color='white', font_size=10,pos=(10,28), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
+altitude_text = scene.visuals.Text(text="Altitude(feet): 0", color='white', font_size=10,pos=(10, 46), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
+fpm_text = scene.visuals.Text(text="Altitude(feet): 0", color='white', font_size=10,pos=(10, 64), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
 heading_text = scene.visuals.Text(text="Heading: 0", color='white', font_size=10,pos=(10, 82), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
 assiette_text = scene.visuals.Text(text="Assiette: 0", color='white', font_size=10,pos=(10, 100), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
 inclinaison_text = scene.visuals.Text(text="Inclinaison: 0", color='white', font_size=10,pos=(10, 118), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
+g_text = scene.visuals.Text(text="G: 0", color='white', font_size=10,pos=(10, 136), parent=canvas.scene, anchor_x='left', anchor_y='bottom')
 
 
 # -------- Fonction de mise à jour --------
 index = int(28    *60*100/5 ) # minutes/secondes à 100hz/5
-
+index = 24480
 def update(event):
     frame=event.count+index
 
@@ -145,12 +157,15 @@ def update(event):
     inclinaison = round(90-(np.arccos(np.dot(aile_gauche, v) / (np.linalg.norm(aile_gauche) * np.linalg.norm(v))))/math.pi*180,1)
     inclinaison_text.text = f"Inclinaison : {inclinaison}"
 
+    #TO DO, fix inclinaison et assiette en vol dos
 
     frame_text.text = f"Frame : {frame}"
     speed_text.text = f"Speed(km/h): {speed}"
     altitude_text.text = f"Altitude(feet) : {alt}"
     heading_text.text = f"Heading : {heading}"
     utc_text.text = f"Time : {date}"
+    g_text.text = f"G : {df['G'][frame]}"
+    fpm_text.text = f"Vario : {round(df['fpm'][frame]*60*3.28084/5)}"
 # Timer pour animation
 timer = app.Timer(interval=0.05, connect=update, start=True)  # 20 FPS
 
